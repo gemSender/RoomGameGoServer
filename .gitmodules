@@ -1,0 +1,3 @@
+[submodule "proto_files"]
+	path = proto_files
+	url = https://github.com/gemSender/RoomGameProtoFiles.git
