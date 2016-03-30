@@ -10,7 +10,7 @@ const maxCommandCount int = 16
 type Player struct {
 	Id string
 	Index int32
-	SessionChan chan []byte
+	SessionChan *UdpSessioin
 	nextMsgId int32
 	lastFrame int32
 	commands []*messages.GenMessage
@@ -25,7 +25,7 @@ func (this *Player) GetComand(msg *messages.GenMessage)  bool{
 		item := this.commands[i]
 		diff := *item.Frame - *msg.Frame
 		if diff < 0 {
-			newSlice := this.commands[0 : len(this.commands)+1]
+			newSlice := append(this.commands, nil)
 			copy(newSlice[i + 1:], newSlice[i:])
 			newSlice[i] = msg
 			this.commands = newSlice

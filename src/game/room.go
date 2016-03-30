@@ -3,7 +3,6 @@ package game
 import (
 	"../messages/room_messages/proto_files"
 	"../messages/world_messages/proto_files"
-	"github.com/golang/protobuf/proto"
 	"log"
 )
 
@@ -23,7 +22,7 @@ func NewRoom(capacity int32) *Room {
 	return ret
 }
 
-func (this *Room) GetMessage(sessionChan chan []byte, msg *messages.GenMessage) {
+func (this *Room) ProcessCommand(udpSession *UdpSessioin, msg *messages.GenMessage, msgBytes []byte) {
 	frame := *msg.Frame
 	if this.maxFrame < frame {
 		this.maxFrame = frame
@@ -34,16 +33,15 @@ func (this *Room) GetMessage(sessionChan chan []byte, msg *messages.GenMessage) 
 	})
 	if player.GetComand(msg){
 		player.TryRemoveHeadCmd()
-		player.SessionChan = sessionChan
+		player.SessionChan = udpSession
 		msgId := *msg.MsgId
 		if player.nextMsgId <= msgId{
 			player.nextMsgId = msgId
 		}
-		msgBytes, _ := proto.Marshal(msg)
 		for i, imax := 0, len(this.Players); i < imax; i++{
 			sess := this.Players[i].SessionChan
 			if sess != nil{
-				sess <- msgBytes
+				sess.Send(msgBytes)
 			}
 		}
 	}else{
@@ -72,4 +70,18 @@ func (this *Room) AddPlayer(playerId string, playerIndex int32) (world_messages.
 	}else {
 		return world_messages.EnterRoomResult_AlreadyIn, nil
 	}
+}
+
+func (this *Room) GetCommand(playerIndex int32, frame int32) *messages.GenMessage{
+	playerItem, findErr := this.Players.First(func(x *Player) bool{
+		return x.Index == playerIndex
+	})
+	if findErr == nil {
+		for _, c := range playerItem.commands {
+			if c.GetFrame() == frame{
+				return c
+			}
+		}
+	}
+	return nil
 }
