@@ -48,6 +48,7 @@ func (this *World) EnterRoom(playerId string, pIndex *int32,roomIdx int32) (worl
 		playerIndex := this.nextPlayerIndex
 		this.nextPlayerIndex ++
 		this.PlayerIndex_Room_Map[playerIndex] = room
+		this.PlayerId_Index_Map[playerId] = playerIndex
 		*pIndex = playerIndex
 		return room.AddPlayer(playerId, playerIndex)
 	}
@@ -77,9 +78,22 @@ func (this *World) GetRoomByRoomIndex(index int32) *Room{
 func (this *World)  OnPlayerDisconnect(playerId string){
 	Index, findIndex := this.PlayerId_Index_Map[playerId]
 	if findIndex{
-		_, findRoom := this.PlayerIndex_Room_Map[Index]
+		delete(this.PlayerId_Index_Map, playerId)
+		room, findRoom := this.PlayerIndex_Room_Map[Index]
 		if findRoom{
-			// exit room
+			log.Println("player quit room")
+			delete(this.PlayerIndex_Room_Map, Index)
+			room.RemovePlayer(playerId)
+			pushMsg := world_messages.MsgPlayerQuitRoom{PlayerId:&playerId, RoomId:&room.Id, PlayerIndex:&Index}
+			pushBytes, encodeErr := proto.Marshal(&pushMsg)
+			if encodeErr != nil{
+				log.Panic(encodeErr)
+			}
+			for pId, session := range worldMsgDispatcher.playerChanDict{
+				if pId != playerId{
+					session.Send(world_messages.MessageType_PlayerQuitRoom, -1, pushBytes)
+				}
+			}
 		}
 	}
 }
@@ -97,6 +111,16 @@ func (this *World) OnCreateRoomMsgCallBack(session WorldSession, msg *world_mess
 		log.Panic(encodeErr)
 	}
 	session.Send(world_messages.MessageType_CreateRoomReply, msg.GetMsgId(), replyBytes)
+	pushMsg := world_messages.MsgPlayerCreateRoom{RoomId:&newRoom.Id, PlayerId:&session.PlayerId, Capacity:&newRoom.Capacity}
+	pushBytes, encodeErr1 := proto.Marshal(&pushMsg)
+	if encodeErr1 != nil{
+		log.Panic(encodeErr1)
+	}
+	for pId, pSession := range worldMsgDispatcher.playerChanDict{
+		if pId != session.PlayerId {
+			pSession.Send(world_messages.MessageType_PlayerCreateRoom, -1, pushBytes)
+		}
+	}
 }
 
 func (this *World) OnEnterRoomCallBack(session WorldSession, msg *world_messages.WorldMessage, msgBytes []byte) {

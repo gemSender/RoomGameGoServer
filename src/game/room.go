@@ -85,3 +85,20 @@ func (this *Room) GetCommand(playerIndex int32, frame int32) *messages.GenMessag
 	}
 	return nil
 }
+
+func (this *Room) RemovePlayer(playerId string) {
+	index := -1
+	for i, p := range this.Players{
+		if p.Id == playerId {
+			index = i
+			break
+		}
+	}
+	if index >= 0{
+		count := len(this.Players)
+		if index == count {
+			copy(this.Players[index:], this.Players[index + 1:])
+		}
+		this.Players = this.Players[:count - 1]
+	}
+}

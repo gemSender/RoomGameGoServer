@@ -43,6 +43,14 @@ func CreateWorldMessageDispatcher() *WorldMessageDispatcher{
 	return ret
 }
 
+func (this *WorldMessageDispatcher) GetSession(playerId string)  *WorldSession{
+	sessoin, exists := this.playerChanDict[playerId]
+	if exists{
+		return &sessoin
+	}
+	return nil
+}
+
 func (this *WorldMessageDispatcher) RegisterHandler(msgType world_messages.MessageType, action func(WorldSession, *world_messages.WorldMessage, []byte))  {
 	this.msgActionDict[msgType] = action
 }
@@ -52,8 +60,8 @@ func (this *WorldMessageDispatcher) StartRecvLoop(exitNotifyWorldChan chan strin
 	for {
 		select {
 		case exitPlayerId := <- exitNotifyWorldChan:
-			delete(this.playerChanDict, exitPlayerId)
 			world.OnPlayerDisconnect(exitPlayerId)
+			delete(this.playerChanDict, exitPlayerId)
 		case clientMsg := <- worldMsgChan:
 			msg := &world_messages.WorldMessage{}
 			parseErr := proto.Unmarshal(clientMsg.Bytes, msg)
