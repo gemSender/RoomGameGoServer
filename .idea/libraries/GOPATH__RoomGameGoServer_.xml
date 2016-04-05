@@ -1,0 +1,24 @@
+<component name="libraryTable">
+  <library name="GOPATH &lt;RoomGameGoServer&gt;">
+    <CLASSES>
+      <root url="file://G:/go_path/src/gopkg.in" />
+      <root url="file://G:/go_path/src/github.com" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <excluded>
+      <root url="file://G:/go_path/src/github.com/veandco/go-sdl2/.git" />
+      <root url="file://G:/go_path/src/github.com/golang/protobuf/protoc-gen-go/testdata" />
+      <root url="file://G:/go_path/src/github.com/gorilla/websocket/.git" />
+      <root url="file://$PROJECT_DIR$" />
+      <root url="file://G:/go_path/src/gopkg.in/mgo.v2/.git" />
+      <root url="file://G:/go_path/src/gopkg.in/check.v1/.git" />
+      <root url="file://G:/go_path/src/github.com/golang/protobuf/proto/testdata" />
+      <root url="file://G:/go_path/src/github.com/neguse/go-box2d-lite/.git" />
+      <root url="file://G:/go_path/src/github.com/andlabs/ui/.git" />
+      <root url="file://G:/go_path/src/github.com/banthar/gl/.git" />
+      <root url="file://G:/go_path/src/github.com/golang/protobuf/.git" />
+      <root url="file://G:/go_path/src/github.com/ftrvxmtrx/gochipmunk/.git" />
+    </excluded>
+  </library>
+</component>
