@@ -10,7 +10,7 @@ const maxCommandCount int = 16
 type Player struct {
 	Id string
 	Index int32
-	SessionChan *UdpSessioin
+	SessionChan PlayerRoomSession
 	nextMsgId int32
 	lastFrame int32
 	commands []*messages.GenMessage

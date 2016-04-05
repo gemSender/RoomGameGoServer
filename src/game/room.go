@@ -22,7 +22,7 @@ func NewRoom(capacity int32) *Room {
 	return ret
 }
 
-func (this *Room) ProcessCommand(udpSession *UdpSessioin, msg *messages.GenMessage, msgBytes []byte) {
+func (this *Room) ProcessCommand(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte) {
 	frame := *msg.Frame
 	if this.maxFrame < frame {
 		this.maxFrame = frame
@@ -33,7 +33,7 @@ func (this *Room) ProcessCommand(udpSession *UdpSessioin, msg *messages.GenMessa
 	})
 	if player.GetComand(msg){
 		player.TryRemoveHeadCmd()
-		player.SessionChan = udpSession
+		player.SessionChan = session
 		msgId := *msg.MsgId
 		if player.nextMsgId <= msgId{
 			player.nextMsgId = msgId

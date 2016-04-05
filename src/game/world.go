@@ -153,6 +153,7 @@ func (this *World) OnEnterRoomCallBack(session WorldSession, msg *world_messages
 	session.Send(world_messages.MessageType_EnterRoomReply, msg.GetMsgId(), replyBytes)
 }
 
+
 func (this *World) OnGetRoomList(session WorldSession, msg *world_messages.WorldMessage, msgBytes []byte) {
 	replyRooms := make([]*world_messages.Room, len(this.Rooms))
 	replyMsg := world_messages.MsgGetRoomListReply{}
