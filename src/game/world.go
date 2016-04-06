@@ -1,7 +1,7 @@
 package game
 
 import (
-	"../messages/world_messages/proto_files"
+	world_messages "../messages/world_messages/proto_files"
 	"log"
 	"github.com/golang/protobuf/proto"
 )

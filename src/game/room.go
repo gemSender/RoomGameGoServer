@@ -3,7 +3,7 @@ package game
 import (
 	"github.com/golang/protobuf/proto"
 	"../messages/proto_files"
-	"../messages/room_messages/proto_files"
+	room_message "../messages/room_messages/proto_files"
 	"../messages/world_messages/proto_files"
 	"log"
 )
@@ -48,13 +48,13 @@ func (this *Room) ProcessCommand(session PlayerRoomSession, playerIndex int32, m
 	}
 }
 
-func (this *Room) AddPlayer(playerId string, playerIndex int32) (world_messages.EnterRoomResult, []int32) {
+func (this *Room) AddPlayer(playerId string, playerIndex int32) (world.EnterRoomResult, []int32) {
 	_, findErr := this.Players.First(func(x *Player) bool{
 		return x.Index == playerIndex
 	})
 	if findErr != nil{
 		if len(this.Players) > int(this.Capacity){
-			return world_messages.EnterRoomResult_OutOfCapacity, nil
+			return world.EnterRoomResult_OutOfCapacity, nil
 		}
 		newPlayer := NewPlayer()
 		newPlayer.Id = playerId
@@ -65,9 +65,9 @@ func (this *Room) AddPlayer(playerId string, playerIndex int32) (world_messages.
 		for i, p := range this.Players {
 			allPlayerIndices[i] = p.Index
 		}
-		return world_messages.EnterRoomResult_Ok, allPlayerIndices
+		return world.EnterRoomResult_Ok, allPlayerIndices
 	}else {
-		return world_messages.EnterRoomResult_AlreadyIn, nil
+		return world.EnterRoomResult_AlreadyIn, nil
 	}
 }
 
@@ -103,27 +103,27 @@ func (this *Room) RemovePlayer(playerId string) {
 }
 
 func (room *Room)Rpc(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message)  {
-	rpcMsg := innerMsg.(*room_messages.Rpc)
+	rpcMsg := innerMsg.(*room_message.Rpc)
 	room.ProcessCommand(session, msg.GetPIdx(), msg.GetMsgId(), rpcMsg.GetFrame(), msgBytes)
 }
 
 func (room *Room) CreateObj(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message)  {
-	crtObjMsg := innerMsg.(*room_messages.CreateObj)
+	crtObjMsg := innerMsg.(*room_message.CrtObj)
 	room.ProcessCommand(session, msg.GetPIdx(), msg.GetMsgId(), crtObjMsg.GetFrame(), msgBytes)
 }
 
 func (room *Room) ReadyForGame(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message) {
-	rdyForGame := innerMsg.(*room_messages.ReadyForGame)
+	rdyForGame := innerMsg.(*room_message.Ready)
 	room.ProcessCommand(session, msg.GetPIdx(), msg.GetMsgId(), rdyForGame.GetFrame(), msgBytes)
 }
 
 func (room *Room) Empty(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message)  {
-	emptyMsg := innerMsg.(*room_messages.Empty)
+	emptyMsg := innerMsg.(*room_message.Empty)
 	room.ProcessCommand(session, msg.GetPIdx(), msg.GetMsgId(), emptyMsg.GetFrame(), msgBytes)
 }
 
 func (room *Room) GetMissingCmd(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message)  {
-	getMissingCmdMsg := innerMsg.(*room_messages.GetMissingCmd)
+	getMissingCmdMsg := innerMsg.(*room_message.GetMisCmd)
 	targetCmd := room.GetCommand(getMissingCmdMsg.GetPlayerIndex(), getMissingCmdMsg.GetFrame())
 	if targetCmd != nil{
 		session.Send(targetCmd.bytes)

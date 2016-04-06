@@ -90,7 +90,7 @@ func (this *RoomMessageDispatcher) OnReceiveMessage(session PlayerRoomSession, b
 		if decodeErr1 != nil{
 			log.Panic(decodeErr1)
 		}
-		reflect.ValueOf(room).MethodByName(roomMsg.GetType()[len("room_messages."):]).Call([]reflect.Value{reflect.ValueOf(session), reflect.ValueOf(&roomMsg), reflect.ValueOf(bytes), innerMsgValue})
+		reflect.ValueOf(room).MethodByName(roomMsg.GetType()[len("room_messages."):]).Call([]reflect.Value{reflect.ValueOf(session), reflect.ValueOf(roomMsg), reflect.ValueOf(bytes), innerMsgValue})
 	}
 }
 
