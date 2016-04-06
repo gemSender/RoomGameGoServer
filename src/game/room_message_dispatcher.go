@@ -16,6 +16,8 @@ type PlayerRoomSession interface {
 
 type RoomMessageDispatcher struct {
 	wsMsgChan chan WebSocketMsg
+	roomChannel chan ConnRoomUdpMsg
+	udpConn *net.UDPConn
 	indexRoomMap map[int32]*Room
 	msgTypeActionMap map[messages.MessageType]func(PlayerRoomSession, *messages.GenMessage, []byte, *Room)
 }
@@ -69,19 +71,10 @@ func (this *RoomMessageDispatcher) RegisterMessageHandler(msgType messages.Messa
 }
 
 func (this *RoomMessageDispatcher) StartReceiveLoop()  {
-	udpListenAddr, _ := net.ResolveUDPAddr("udp", ":2012")
-	udpConn, udpListenErr := net.ListenUDP("udp", udpListenAddr)
-	if udpListenErr != nil{
-		log.Println(udpListenErr)
-	}
-	roomChannel := make(chan ConnRoomUdpMsg)
-	go PlayerRoomUdpMsgRecvLoop(roomChannel, udpConn)
-	this.wsMsgChan = make(chan WebSocketMsg, 256)
-	http.HandleFunc("/room", this.ServeRoomWS)
 	for {
 		select {
-		case conn_msg := <- roomChannel:
-			session := &UdpSessioin{UdpConn:udpConn, RemoteAddr:conn_msg.RemoteAddr}
+		case conn_msg := <- this.roomChannel:
+			session := &UdpSessioin{UdpConn:this.udpConn, RemoteAddr:conn_msg.RemoteAddr}
 			this.OnReceiveMessage(session, conn_msg.Bytes)
 		case chan_msg := <- this.wsMsgChan:
 			session := &WebsocketSession{SendChan:chan_msg.SendChan}
@@ -138,12 +131,27 @@ func (this *RoomMessageDispatcher) ServeRoomWS(w http.ResponseWriter, r *http.Re
 	go WsRoomConnWriteProcess(ws, exitChan, sendChan)
 }
 
+func (this *RoomMessageDispatcher) StartListen() *RoomMessageDispatcher  {
+	udpListenAddr, _ := net.ResolveUDPAddr("udp", ":2012")
+	udpConn, udpListenErr := net.ListenUDP("udp", udpListenAddr)
+	if udpListenErr != nil{
+		log.Println(udpListenErr)
+	}
+	log.Println("Listen at udp port 2012 for room message dispatcher")
+	this.udpConn = udpConn
+	this.roomChannel = make(chan ConnRoomUdpMsg)
+	this.wsMsgChan = make(chan WebSocketMsg, 256)
+	go PlayerRoomUdpMsgRecvLoop(this.roomChannel, udpConn)
+	http.HandleFunc("/room", this.ServeRoomWS)
+	return this
+}
+
 func PlayerRoomUdpMsgRecvLoop(roomChannel chan ConnRoomUdpMsg, conn *net.UDPConn)  {
 	recvBuf := make([]byte, 256)
 	for  {
-		bcount, remoteAddr, error := conn.ReadFromUDP(recvBuf)
-		if error != nil{
-			panic(error)
+		bcount, remoteAddr, err := conn.ReadFromUDP(recvBuf)
+		if err != nil{
+			panic(err)
 		}
 		copiedBytes := make([]byte, bcount)
 		copy(copiedBytes, recvBuf[:bcount])

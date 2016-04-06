@@ -11,10 +11,11 @@ import (
 func main(){
 	worldMsgDispatcher := game.CreateWorldMessageDispatcher()
 	game.CreateWorld()
-	go worldMsgDispatcher.StartRecvLoop()
+	go worldMsgDispatcher.StartListen().StartRecvLoop()
 	roomMsgDispatcher := game.CreateRoomMsgDispatcher()
-	go roomMsgDispatcher.StartReceiveLoop()
+	go roomMsgDispatcher.StartListen().StartReceiveLoop()
 	var addr = flag.String("addr", ":8080", "http service address")
+	log.Println("Listen at port 8080 for http service")
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

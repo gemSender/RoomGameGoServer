@@ -184,10 +184,6 @@ func (this *WorldMessageDispatcher) RegisterHandler(msgType world_messages.Messa
 }
 
 func (this *WorldMessageDispatcher) StartRecvLoop()  {
-	this.worldMsgChan = make(chan ClientMsg, 1024)
-	this.exitNotifyWorldChan = make(chan string, 1024)
-	go this.StartListenTcp()
-	this.StartListenWebSocket()
 	world := world_instance
 	for {
 		select {
@@ -218,6 +214,7 @@ func (this *WorldMessageDispatcher) StartListenTcp()  {
 	if listenErr != nil{
 		log.Panic(listenErr)
 	}
+	log.Println("Listen at Tcp port 1234 for world message dispatcher")
 	for  {
 		conn, acError := tcpListener.Accept()
 		if acError != nil{
@@ -251,4 +248,12 @@ func (this *WorldMessageDispatcher) ServeWebsocket(w http.ResponseWriter, r *htt
 
 func (this *WorldMessageDispatcher) StartListenWebSocket()  {
 	http.HandleFunc("/world", this.ServeWebsocket)
+}
+
+func (this *WorldMessageDispatcher) StartListen() *WorldMessageDispatcher{
+	this.worldMsgChan = make(chan ClientMsg, 1024)
+	this.exitNotifyWorldChan = make(chan string, 1024)
+	go this.StartListenTcp()
+	this.StartListenWebSocket()
+	return this
 }
