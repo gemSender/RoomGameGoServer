@@ -277,7 +277,7 @@ func (this *WorldMessageDispatcher) StartListen() *WorldMessageDispatcher{
 }
 
 func (this *WorldMessageDispatcher) PushMutiply(innerMsg proto.Message, match func(string) bool)  {
-	replyMsg := &world_messages.ReplyMsg{}
+	replyMsg := &messages.GenMessage{}
 	msgId := int32(-1)
 	replyMsg.MsgId = &msgId
 	msgType := proto.MessageName(innerMsg)
@@ -286,7 +286,7 @@ func (this *WorldMessageDispatcher) PushMutiply(innerMsg proto.Message, match fu
 	if encodeErr != nil{
 		log.Panic(encodeErr)
 	}
-	replyMsg.Buff = innerBytes
+	replyMsg.Buf = innerBytes
 	bytes, encodeErr1 := proto.Marshal(replyMsg)
 	if encodeErr1 != nil{
 		log.Panic(encodeErr1)
