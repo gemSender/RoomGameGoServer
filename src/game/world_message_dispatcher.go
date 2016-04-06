@@ -151,13 +151,13 @@ func StartPlayerSendLoop(sendChan chan []byte, exitSingalChan chan int, conn Wor
 }
 
 func (this *WorldSession) Send(msgId int32, innerMsg proto.Message) {
-	msg := world_messages.ReplyMsg{}
+	msg := messages.GenMessage{}
 	msg.MsgId = &msgId
 	bytes, encodeErr1 := proto.Marshal(innerMsg)
 	if encodeErr1 != nil{
 		log.Panic(encodeErr1)
 	}
-	msg.Buff = bytes
+	msg.Buf = bytes
 	msgType := proto.MessageName(innerMsg)
 	msg.Type = &msgType
 	msgBytes, encodeErr2 := proto.Marshal(&msg)
