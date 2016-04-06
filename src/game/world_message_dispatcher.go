@@ -120,6 +120,7 @@ func (this *WebSocketMsgConn) ReceiveMessage() []byte {
 func StartPlayerRecvLoop(exitNotifyWorldChan chan string, exitSingalChan chan int, worldMsgChan chan ClientMsg, sendChan chan []byte, conn WorldMessageConn)  {
 	defer func() { conn.Close(); exitSingalChan <- 1}()
 	msg1Bytes := conn.ReceiveMessage()
+	log.Println("receive ", len(msg1Bytes), " bytes from client")
 	if msg1Bytes == nil{
 		return
 	}
@@ -129,6 +130,7 @@ func StartPlayerRecvLoop(exitNotifyWorldChan chan string, exitSingalChan chan in
 	defer func() {exitNotifyWorldChan <- playerId}()
 	for {
 		msgBytes := conn.ReceiveMessage()
+		log.Println("receive ", len(msg1Bytes), " bytes from client")
 		if msgBytes == nil{
 			return
 		}
@@ -214,13 +216,13 @@ func (this *WorldMessageDispatcher) StartRecvLoop()  {
 			}else{
 				session = this.playerChanDict[*clientMsg.PlayerId]
 			}
-
-			innerMsgValue := reflect.New(proto.MessageType(msg.GetType()))
+			innerMsgValue := reflect.New(proto.MessageType(msg.GetType()).Elem())
 			decodeErr := proto.Unmarshal(msg.GetBuf(), innerMsgValue.Interface().(proto.Message))
 			if decodeErr != nil{
 				log.Panic(decodeErr)
 			}
-			reflect.ValueOf(world).MethodByName(msg.GetType()[len("world_messages"):]).Call([]reflect.Value{reflect.ValueOf(session), reflect.ValueOf(innerMsgValue)})
+			method := reflect.ValueOf(world).MethodByName(msg.GetType()[len("world_messages."):])
+			method.Call([]reflect.Value{reflect.ValueOf(session), reflect.ValueOf(msg.GetMsgId()), innerMsgValue})
 		}
 	}
 }

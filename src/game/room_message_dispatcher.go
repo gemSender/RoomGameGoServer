@@ -85,12 +85,12 @@ func (this *RoomMessageDispatcher) OnReceiveMessage(session PlayerRoomSession, b
 	playerIndex := roomMsg.GetPIdx()
 	room := world_instance.GetRoomByPlayerIndex(playerIndex)
 	if room != nil {
-		innerMsgValue := reflect.New(proto.MessageType(roomMsg.GetType()))
+		innerMsgValue := reflect.New(proto.MessageType(roomMsg.GetType()).Elem())
 		decodeErr1 := proto.Unmarshal(roomMsg.GetBuf(), innerMsgValue.Interface().(proto.Message))
 		if decodeErr1 != nil{
 			log.Panic(decodeErr1)
 		}
-		reflect.ValueOf(room).MethodByName(roomMsg.GetType()[len("room_messages"):]).Call([]reflect.Value{reflect.ValueOf(session), reflect.ValueOf(&roomMsg), reflect.ValueOf(bytes), innerMsgValue})
+		reflect.ValueOf(room).MethodByName(roomMsg.GetType()[len("room_messages."):]).Call([]reflect.Value{reflect.ValueOf(session), reflect.ValueOf(&roomMsg), reflect.ValueOf(bytes), innerMsgValue})
 	}
 }
 
