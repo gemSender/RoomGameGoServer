@@ -1,6 +1,8 @@
 package game
 
 import (
+	"github.com/golang/protobuf/proto"
+	"../messages/proto_files"
 	"../messages/room_messages/proto_files"
 	"../messages/world_messages/proto_files"
 	"log"
@@ -22,19 +24,16 @@ func NewRoom(capacity int32) *Room {
 	return ret
 }
 
-func (this *Room) ProcessCommand(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte) {
-	frame := *msg.Frame
+func (this *Room) ProcessCommand(session PlayerRoomSession, playerIndex int32, msgId int32, frame int32, msgBytes []byte) {
 	if this.maxFrame < frame {
 		this.maxFrame = frame
 	}
-	playerIndex := *msg.PIdx
 	player, _ := this.Players.First(func(item *Player) bool{
 		return item.Index == playerIndex
 	})
-	if player.GetComand(msg){
+	if player.GetComand(msgId, frame, msgBytes){
 		player.TryRemoveHeadCmd()
 		player.SessionChan = session
-		msgId := *msg.MsgId
 		if player.nextMsgId <= msgId{
 			player.nextMsgId = msgId
 		}
@@ -45,7 +44,7 @@ func (this *Room) ProcessCommand(session PlayerRoomSession, msg *messages.GenMes
 			}
 		}
 	}else{
-		log.Println("Ignore Command of ", player.Id, " at frame", *msg.Frame)
+		log.Println("Ignore Command of ", player.Id, " at frame", frame)
 	}
 }
 
@@ -72,13 +71,13 @@ func (this *Room) AddPlayer(playerId string, playerIndex int32) (world_messages.
 	}
 }
 
-func (this *Room) GetCommand(playerIndex int32, frame int32) *messages.GenMessage{
+func (this *Room) GetCommand(playerIndex int32, frame int32) *playerCommand{
 	playerItem, findErr := this.Players.First(func(x *Player) bool{
 		return x.Index == playerIndex
 	})
 	if findErr == nil {
 		for _, c := range playerItem.commands {
-			if c.GetFrame() == frame{
+			if c.frame == frame{
 				return c
 			}
 		}
@@ -100,5 +99,33 @@ func (this *Room) RemovePlayer(playerId string) {
 			copy(this.Players[index:], this.Players[index + 1:])
 		}
 		this.Players = this.Players[:count - 1]
+	}
+}
+
+func (room *Room)Rpc(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message)  {
+	rpcMsg := innerMsg.(*room_messages.Rpc)
+	room.ProcessCommand(session, msg.GetPIdx(), msg.GetMsgId(), rpcMsg.GetFrame(), msgBytes)
+}
+
+func (room *Room) CreateObj(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message)  {
+	crtObjMsg := innerMsg.(*room_messages.CreateObj)
+	room.ProcessCommand(session, msg.GetPIdx(), msg.GetMsgId(), crtObjMsg.GetFrame(), msgBytes)
+}
+
+func (room *Room) ReadyForGame(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message) {
+	rdyForGame := innerMsg.(*room_messages.ReadyForGame)
+	room.ProcessCommand(session, msg.GetPIdx(), msg.GetMsgId(), rdyForGame.GetFrame(), msgBytes)
+}
+
+func (room *Room) Empty(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message)  {
+	emptyMsg := innerMsg.(*room_messages.Empty)
+	room.ProcessCommand(session, msg.GetPIdx(), msg.GetMsgId(), emptyMsg.GetFrame(), msgBytes)
+}
+
+func (room *Room) GetMissingCmd(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, innerMsg proto.Message)  {
+	getMissingCmdMsg := innerMsg.(*room_messages.GetMissingCmd)
+	targetCmd := room.GetCommand(getMissingCmdMsg.GetPlayerIndex(), getMissingCmdMsg.GetFrame())
+	if targetCmd != nil{
+		session.Send(targetCmd.bytes)
 	}
 }

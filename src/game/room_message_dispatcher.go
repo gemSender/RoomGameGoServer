@@ -1,13 +1,13 @@
 package game
 
 import (
-	"../messages/room_messages/proto_files"
+	"../messages/proto_files"
 	"github.com/golang/protobuf/proto"
 	"log"
 	"net"
-	"../utility"
 	"github.com/gorilla/websocket"
 	"net/http"
+	"reflect"
 )
 
 type PlayerRoomSession interface {
@@ -19,7 +19,7 @@ type RoomMessageDispatcher struct {
 	roomChannel chan ConnRoomUdpMsg
 	udpConn *net.UDPConn
 	indexRoomMap map[int32]*Room
-	msgTypeActionMap map[messages.MessageType]func(PlayerRoomSession, *messages.GenMessage, []byte, *Room)
+	msgTypeActionMap map[string]func(PlayerRoomSession, *messages.GenMessage, []byte, *Room)
 }
 
 type ConnRoomUdpMsg struct {
@@ -54,21 +54,14 @@ type WebSocketMsg struct {
 	Bytes []byte
 }
 
+
 func CreateRoomMsgDispatcher()  *RoomMessageDispatcher{
 	ret := &RoomMessageDispatcher{}
 	ret.indexRoomMap = make(map[int32]*Room)
-	ret.msgTypeActionMap = make(map[messages.MessageType]func(PlayerRoomSession, *messages.GenMessage, []byte, *Room))
-	ret.RegisterMessageHandler(messages.MessageType_Rpc, HandleGenMessage)
-	ret.RegisterMessageHandler(messages.MessageType_CreateObj, HandleGenMessage)
-	ret.RegisterMessageHandler(messages.MessageType_ReadyForGame, HandleGenMessage)
-	ret.RegisterMessageHandler(messages.MessageType_Empty, HandleGenMessage)
-	ret.RegisterMessageHandler(messages.MessageType_GetMissingCmd, HandleGetMissingCmd)
+	ret.msgTypeActionMap = make(map[string]func(PlayerRoomSession, *messages.GenMessage, []byte, *Room))
 	return ret;
 }
 
-func (this *RoomMessageDispatcher) RegisterMessageHandler(msgType messages.MessageType, action func(PlayerRoomSession, *messages.GenMessage, []byte, *Room)) {
-	this.msgTypeActionMap[msgType] = action
-}
 
 func (this *RoomMessageDispatcher) StartReceiveLoop()  {
 	for {
@@ -84,35 +77,24 @@ func (this *RoomMessageDispatcher) StartReceiveLoop()  {
 }
 
 func (this *RoomMessageDispatcher) OnReceiveMessage(session PlayerRoomSession, bytes []byte)  {
-	roomMsg := messages.GenMessage{}
-	decodeErr := proto.Unmarshal(bytes, &roomMsg)
+	roomMsg := &messages.GenMessage{}
+	decodeErr := proto.Unmarshal(bytes, roomMsg)
 	if decodeErr != nil{
 		log.Panic(decodeErr)
 	}
 	playerIndex := roomMsg.GetPIdx()
 	room := world_instance.GetRoomByPlayerIndex(playerIndex)
 	if room != nil {
-		this.msgTypeActionMap[roomMsg.GetMsgType()](session, &roomMsg, bytes, room)
-	}
-}
-
-
-func HandleGenMessage(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, room *Room)  {
-	room.ProcessCommand(session, msg, msgBytes)
-}
-
-func HandleGetMissingCmd(session PlayerRoomSession, msg *messages.GenMessage, msgBytes []byte, room *Room)  {
-	buf := msg.Buf
-	playerIndex := utility.BytesToInt32(buf)
-	targetCmd := room.GetCommand(playerIndex, msg.GetFrame())
-	if targetCmd != nil{
-		cmdBytes, encodeErr := proto.Marshal(targetCmd)
-		if encodeErr != nil{
-			log.Panic(encodeErr)
+		innerMsgValue := reflect.New(proto.MessageType(roomMsg.GetType()))
+		decodeErr1 := proto.Unmarshal(roomMsg.GetBuf(), innerMsgValue.Interface().(proto.Message))
+		if decodeErr1 != nil{
+			log.Panic(decodeErr1)
 		}
-		session.Send(cmdBytes)
+		reflect.ValueOf(room).MethodByName(roomMsg.GetType()[len("room_messages"):]).Call([]reflect.Value{reflect.ValueOf(session), reflect.ValueOf(&roomMsg), reflect.ValueOf(bytes), innerMsgValue})
 	}
 }
+
+
 
 func (this *RoomMessageDispatcher) ServeRoomWS(w http.ResponseWriter, r *http.Request) {
 	var upgrader = websocket.Upgrader{

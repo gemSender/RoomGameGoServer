@@ -10,6 +10,8 @@ import (
 	"github.com/gorilla/websocket"
 	"bufio"
 	"net/http"
+	"reflect"
+	"../messages/proto_files"
 )
 var worldMsgDispatcher *WorldMessageDispatcher;
 
@@ -17,11 +19,13 @@ type ClientMsg struct{
 	SendChannel chan <- []byte
 	Bytes []byte
 	IdChannel chan <- string
+	PlayerId *string
 }
 
 type WorldSession struct {
 	SendChannel chan <-[]byte
 	PlayerId string
+	IdChannel chan <- string
 }
 
 type WorldMessageConn interface {
@@ -128,7 +132,7 @@ func StartPlayerRecvLoop(exitNotifyWorldChan chan string, exitSingalChan chan in
 		if msgBytes == nil{
 			return
 		}
-		worldMsgChan <- ClientMsg{Bytes:msgBytes, SendChannel:sendChan}
+		worldMsgChan <- ClientMsg{Bytes:msgBytes, SendChannel:sendChan, PlayerId:&playerId}
 	}
 }
 
@@ -144,28 +148,35 @@ func StartPlayerSendLoop(sendChan chan []byte, exitSingalChan chan int, conn Wor
 	}
 }
 
-func (this *WorldSession) Send(msgType world_messages.MessageType, msgId int32, bytes []byte) {
+func (this *WorldSession) Send(msgId int32, innerMsg proto.Message) {
 	msg := world_messages.ReplyMsg{}
 	msg.MsgId = &msgId
-	msg.Buff = bytes
-	msg.Type = &msgType
-	msgBytes, encodeErr := proto.Marshal(&msg)
-	if encodeErr != nil{
-		log.Panic(encodeErr)
+	bytes, encodeErr1 := proto.Marshal(innerMsg)
+	if encodeErr1 != nil{
+		log.Panic(encodeErr1)
 	}
-	this.SendChannel <- msgBytes
+	msg.Buff = bytes
+	msgType := proto.MessageName(innerMsg)
+	msg.Type = &msgType
+	msgBytes, encodeErr2 := proto.Marshal(&msg)
+	if encodeErr2 != nil{
+		log.Panic(encodeErr2)
+	}
+	this.SendBytes(msgBytes)
+}
+
+func (this *WorldSession) SendBytes(bytes []byte)  {
+	this.SendChannel <- bytes
 }
 
 type WorldMessageDispatcher struct{
 	playerChanDict map[string]WorldSession
-	msgActionDict map[world_messages.MessageType]func(WorldSession, *world_messages.WorldMessage, []byte)
 	worldMsgChan chan ClientMsg
 	exitNotifyWorldChan chan string
 }
 
 func CreateWorldMessageDispatcher() *WorldMessageDispatcher{
 	ret := &WorldMessageDispatcher{}
-	ret.msgActionDict = make(map[world_messages.MessageType]func(WorldSession, *world_messages.WorldMessage, []byte))
 	ret.playerChanDict = make(map[string]WorldSession)
 	worldMsgDispatcher = ret
 	return ret
@@ -179,8 +190,9 @@ func (this *WorldMessageDispatcher) GetSession(playerId string)  *WorldSession{
 	return nil
 }
 
-func (this *WorldMessageDispatcher) RegisterHandler(msgType world_messages.MessageType, action func(WorldSession, *world_messages.WorldMessage, []byte))  {
-	this.msgActionDict[msgType] = action
+func (this *WorldMessageDispatcher) RegisterPlayer(session WorldSession)  {
+	session.IdChannel <- session.PlayerId
+	this.playerChanDict[session.PlayerId] = session
 }
 
 func (this *WorldMessageDispatcher) StartRecvLoop()  {
@@ -191,20 +203,24 @@ func (this *WorldMessageDispatcher) StartRecvLoop()  {
 			world.OnPlayerDisconnect(exitPlayerId)
 			delete(this.playerChanDict, exitPlayerId)
 		case clientMsg := <- this.worldMsgChan:
-			msg := &world_messages.WorldMessage{}
+			msg := &messages.GenMessage{}
 			parseErr := proto.Unmarshal(clientMsg.Bytes, msg)
 			if parseErr != nil{
 				panic(parseErr)
 			}
-			playerId := msg.GetPlayerId()
-			session, _ := this.playerChanDict[playerId]
-			if clientMsg.IdChannel != nil{
-				clientMsg.IdChannel <- playerId
-				session = WorldSession{PlayerId:playerId, SendChannel:clientMsg.SendChannel}
-				this.playerChanDict[playerId] = session
+			var session WorldSession
+			if clientMsg.PlayerId == nil{
+				session = WorldSession{SendChannel:clientMsg.SendChannel, IdChannel:clientMsg.IdChannel}
+			}else{
+				session = this.playerChanDict[*clientMsg.PlayerId]
 			}
-			log.Println("get client msg", world_messages.MessageType_name[int32(msg.GetType())])
-			this.msgActionDict[msg.GetType()](session, msg, clientMsg.Bytes)
+
+			innerMsgValue := reflect.New(proto.MessageType(msg.GetType()))
+			decodeErr := proto.Unmarshal(msg.GetBuf(), innerMsgValue.Interface().(proto.Message))
+			if decodeErr != nil{
+				log.Panic(decodeErr)
+			}
+			reflect.ValueOf(world).MethodByName(msg.GetType()[len("world_messages"):]).Call([]reflect.Value{reflect.ValueOf(session), reflect.ValueOf(innerMsgValue)})
 		}
 	}
 }
@@ -256,4 +272,26 @@ func (this *WorldMessageDispatcher) StartListen() *WorldMessageDispatcher{
 	go this.StartListenTcp()
 	this.StartListenWebSocket()
 	return this
+}
+
+func (this *WorldMessageDispatcher) PushMutiply(innerMsg proto.Message, match func(string) bool)  {
+	replyMsg := &world_messages.ReplyMsg{}
+	msgId := int32(-1)
+	replyMsg.MsgId = &msgId
+	msgType := proto.MessageName(innerMsg)
+	replyMsg.Type = &msgType
+	innerBytes, encodeErr := proto.Marshal(innerMsg)
+	if encodeErr != nil{
+		log.Panic(encodeErr)
+	}
+	replyMsg.Buff = innerBytes
+	bytes, encodeErr1 := proto.Marshal(replyMsg)
+	if encodeErr1 != nil{
+		log.Panic(encodeErr1)
+	}
+	for p, sess := range this.playerChanDict{
+		if match(p){
+			sess.SendBytes(bytes)
+		}
+	}
 }

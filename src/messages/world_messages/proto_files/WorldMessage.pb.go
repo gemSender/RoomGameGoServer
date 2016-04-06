@@ -9,15 +9,19 @@ It is generated from these files:
 	proto_files/WorldMessage.proto
 
 It has these top-level messages:
-	MsgPlayerEnterRoom
-	MsgEnterRoomReply
-	WorldMessage
+	PlayerEnterRoom
+	EnterRoomReply
 	Room
 	ReplyMsg
-	MsgGetRoomListReply
-	MsgCreateRoomReply
-	MsgPlayerCreateRoom
-	MsgPlayerQuitRoom
+	GetRoomListReply
+	CreateRoomReply
+	PlayerCreateRoom
+	PlayerQuitRoom
+	CreateRoom
+	EnterRoom
+	GetRoomList
+	Login
+	LoginReply
 */
 package world_messages
 
@@ -33,67 +37,6 @@ var _ = math.Inf
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
 const _ = proto.ProtoPackageIsVersion1
-
-type MessageType int32
-
-const (
-	MessageType_CreateRoom       MessageType = 1
-	MessageType_EnterRoom        MessageType = 2
-	MessageType_QuitRoom         MessageType = 3
-	MessageType_GetRoomList      MessageType = 4
-	MessageType_CreateRoomReply  MessageType = 5
-	MessageType_EnterRoomReply   MessageType = 6
-	MessageType_QuitRoomReply    MessageType = 7
-	MessageType_GetRoomListReply MessageType = 8
-	MessageType_PlayerEnterRoom  MessageType = 9
-	MessageType_PlayerCreateRoom MessageType = 10
-	MessageType_PlayerQuitRoom   MessageType = 11
-)
-
-var MessageType_name = map[int32]string{
-	1:  "CreateRoom",
-	2:  "EnterRoom",
-	3:  "QuitRoom",
-	4:  "GetRoomList",
-	5:  "CreateRoomReply",
-	6:  "EnterRoomReply",
-	7:  "QuitRoomReply",
-	8:  "GetRoomListReply",
-	9:  "PlayerEnterRoom",
-	10: "PlayerCreateRoom",
-	11: "PlayerQuitRoom",
-}
-var MessageType_value = map[string]int32{
-	"CreateRoom":       1,
-	"EnterRoom":        2,
-	"QuitRoom":         3,
-	"GetRoomList":      4,
-	"CreateRoomReply":  5,
-	"EnterRoomReply":   6,
-	"QuitRoomReply":    7,
-	"GetRoomListReply": 8,
-	"PlayerEnterRoom":  9,
-	"PlayerCreateRoom": 10,
-	"PlayerQuitRoom":   11,
-}
-
-func (x MessageType) Enum() *MessageType {
-	p := new(MessageType)
-	*p = x
-	return p
-}
-func (x MessageType) String() string {
-	return proto.EnumName(MessageType_name, int32(x))
-}
-func (x *MessageType) UnmarshalJSON(data []byte) error {
-	value, err := proto.UnmarshalJSONEnum(MessageType_value, data, "MessageType")
-	if err != nil {
-		return err
-	}
-	*x = MessageType(value)
-	return nil
-}
-func (MessageType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 type EnterRoomResult int32
 
@@ -133,105 +76,64 @@ func (x *EnterRoomResult) UnmarshalJSON(data []byte) error {
 	*x = EnterRoomResult(value)
 	return nil
 }
-func (EnterRoomResult) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (EnterRoomResult) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-type MsgPlayerEnterRoom struct {
+type PlayerEnterRoom struct {
 	RoomId           *int32 `protobuf:"varint,1,req,name=roomId" json:"roomId,omitempty"`
 	PlayerIndex      *int32 `protobuf:"varint,2,req,name=playerIndex" json:"playerIndex,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
 }
 
-func (m *MsgPlayerEnterRoom) Reset()                    { *m = MsgPlayerEnterRoom{} }
-func (m *MsgPlayerEnterRoom) String() string            { return proto.CompactTextString(m) }
-func (*MsgPlayerEnterRoom) ProtoMessage()               {}
-func (*MsgPlayerEnterRoom) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (m *PlayerEnterRoom) Reset()                    { *m = PlayerEnterRoom{} }
+func (m *PlayerEnterRoom) String() string            { return proto.CompactTextString(m) }
+func (*PlayerEnterRoom) ProtoMessage()               {}
+func (*PlayerEnterRoom) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *MsgPlayerEnterRoom) GetRoomId() int32 {
+func (m *PlayerEnterRoom) GetRoomId() int32 {
 	if m != nil && m.RoomId != nil {
 		return *m.RoomId
 	}
 	return 0
 }
 
-func (m *MsgPlayerEnterRoom) GetPlayerIndex() int32 {
+func (m *PlayerEnterRoom) GetPlayerIndex() int32 {
 	if m != nil && m.PlayerIndex != nil {
 		return *m.PlayerIndex
 	}
 	return 0
 }
 
-type MsgEnterRoomReply struct {
+type EnterRoomReply struct {
 	Players          []int32          `protobuf:"varint,1,rep,name=players" json:"players,omitempty"`
 	AllockedIndex    *int32           `protobuf:"varint,2,req,name=allockedIndex" json:"allockedIndex,omitempty"`
 	Result           *EnterRoomResult `protobuf:"varint,3,req,name=result,enum=world_messages.EnterRoomResult" json:"result,omitempty"`
 	XXX_unrecognized []byte           `json:"-"`
 }
 
-func (m *MsgEnterRoomReply) Reset()                    { *m = MsgEnterRoomReply{} }
-func (m *MsgEnterRoomReply) String() string            { return proto.CompactTextString(m) }
-func (*MsgEnterRoomReply) ProtoMessage()               {}
-func (*MsgEnterRoomReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (m *EnterRoomReply) Reset()                    { *m = EnterRoomReply{} }
+func (m *EnterRoomReply) String() string            { return proto.CompactTextString(m) }
+func (*EnterRoomReply) ProtoMessage()               {}
+func (*EnterRoomReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *MsgEnterRoomReply) GetPlayers() []int32 {
+func (m *EnterRoomReply) GetPlayers() []int32 {
 	if m != nil {
 		return m.Players
 	}
 	return nil
 }
 
-func (m *MsgEnterRoomReply) GetAllockedIndex() int32 {
+func (m *EnterRoomReply) GetAllockedIndex() int32 {
 	if m != nil && m.AllockedIndex != nil {
 		return *m.AllockedIndex
 	}
 	return 0
 }
 
-func (m *MsgEnterRoomReply) GetResult() EnterRoomResult {
+func (m *EnterRoomReply) GetResult() EnterRoomResult {
 	if m != nil && m.Result != nil {
 		return *m.Result
 	}
 	return EnterRoomResult_Ok
-}
-
-type WorldMessage struct {
-	Type             *MessageType `protobuf:"varint,1,req,name=type,enum=world_messages.MessageType" json:"type,omitempty"`
-	PlayerId         *string      `protobuf:"bytes,2,req,name=playerId" json:"playerId,omitempty"`
-	Buff             []byte       `protobuf:"bytes,3,opt,name=buff" json:"buff,omitempty"`
-	MsgId            *int32       `protobuf:"varint,4,req,name=msgId" json:"msgId,omitempty"`
-	XXX_unrecognized []byte       `json:"-"`
-}
-
-func (m *WorldMessage) Reset()                    { *m = WorldMessage{} }
-func (m *WorldMessage) String() string            { return proto.CompactTextString(m) }
-func (*WorldMessage) ProtoMessage()               {}
-func (*WorldMessage) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
-
-func (m *WorldMessage) GetType() MessageType {
-	if m != nil && m.Type != nil {
-		return *m.Type
-	}
-	return MessageType_CreateRoom
-}
-
-func (m *WorldMessage) GetPlayerId() string {
-	if m != nil && m.PlayerId != nil {
-		return *m.PlayerId
-	}
-	return ""
-}
-
-func (m *WorldMessage) GetBuff() []byte {
-	if m != nil {
-		return m.Buff
-	}
-	return nil
-}
-
-func (m *WorldMessage) GetMsgId() int32 {
-	if m != nil && m.MsgId != nil {
-		return *m.MsgId
-	}
-	return 0
 }
 
 type Room struct {
@@ -244,7 +146,7 @@ type Room struct {
 func (m *Room) Reset()                    { *m = Room{} }
 func (m *Room) String() string            { return proto.CompactTextString(m) }
 func (*Room) ProtoMessage()               {}
-func (*Room) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*Room) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 func (m *Room) GetId() int32 {
 	if m != nil && m.Id != nil {
@@ -268,22 +170,22 @@ func (m *Room) GetCapacity() int32 {
 }
 
 type ReplyMsg struct {
-	Type             *MessageType `protobuf:"varint,1,req,name=type,enum=world_messages.MessageType" json:"type,omitempty"`
-	MsgId            *int32       `protobuf:"varint,2,req,name=msgId" json:"msgId,omitempty"`
-	Buff             []byte       `protobuf:"bytes,3,req,name=buff" json:"buff,omitempty"`
-	XXX_unrecognized []byte       `json:"-"`
+	Type             *string `protobuf:"bytes,1,req,name=type" json:"type,omitempty"`
+	MsgId            *int32  `protobuf:"varint,2,req,name=msgId" json:"msgId,omitempty"`
+	Buff             []byte  `protobuf:"bytes,3,req,name=buff" json:"buff,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
 }
 
 func (m *ReplyMsg) Reset()                    { *m = ReplyMsg{} }
 func (m *ReplyMsg) String() string            { return proto.CompactTextString(m) }
 func (*ReplyMsg) ProtoMessage()               {}
-func (*ReplyMsg) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*ReplyMsg) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
-func (m *ReplyMsg) GetType() MessageType {
+func (m *ReplyMsg) GetType() string {
 	if m != nil && m.Type != nil {
 		return *m.Type
 	}
-	return MessageType_CreateRoom
+	return ""
 }
 
 func (m *ReplyMsg) GetMsgId() int32 {
@@ -300,170 +202,245 @@ func (m *ReplyMsg) GetBuff() []byte {
 	return nil
 }
 
-type MsgGetRoomListReply struct {
+type GetRoomListReply struct {
 	Rooms            []*Room `protobuf:"bytes,1,rep,name=rooms" json:"rooms,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *MsgGetRoomListReply) Reset()                    { *m = MsgGetRoomListReply{} }
-func (m *MsgGetRoomListReply) String() string            { return proto.CompactTextString(m) }
-func (*MsgGetRoomListReply) ProtoMessage()               {}
-func (*MsgGetRoomListReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (m *GetRoomListReply) Reset()                    { *m = GetRoomListReply{} }
+func (m *GetRoomListReply) String() string            { return proto.CompactTextString(m) }
+func (*GetRoomListReply) ProtoMessage()               {}
+func (*GetRoomListReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
-func (m *MsgGetRoomListReply) GetRooms() []*Room {
+func (m *GetRoomListReply) GetRooms() []*Room {
 	if m != nil {
 		return m.Rooms
 	}
 	return nil
 }
 
-type MsgCreateRoomReply struct {
+type CreateRoomReply struct {
 	ErrorCode        *int32 `protobuf:"varint,1,opt,name=errorCode,def=0" json:"errorCode,omitempty"`
 	Id               *int32 `protobuf:"varint,2,req,name=id" json:"id,omitempty"`
 	Capacity         *int32 `protobuf:"varint,3,req,name=capacity" json:"capacity,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
 }
 
-func (m *MsgCreateRoomReply) Reset()                    { *m = MsgCreateRoomReply{} }
-func (m *MsgCreateRoomReply) String() string            { return proto.CompactTextString(m) }
-func (*MsgCreateRoomReply) ProtoMessage()               {}
-func (*MsgCreateRoomReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (m *CreateRoomReply) Reset()                    { *m = CreateRoomReply{} }
+func (m *CreateRoomReply) String() string            { return proto.CompactTextString(m) }
+func (*CreateRoomReply) ProtoMessage()               {}
+func (*CreateRoomReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
-const Default_MsgCreateRoomReply_ErrorCode int32 = 0
+const Default_CreateRoomReply_ErrorCode int32 = 0
 
-func (m *MsgCreateRoomReply) GetErrorCode() int32 {
+func (m *CreateRoomReply) GetErrorCode() int32 {
 	if m != nil && m.ErrorCode != nil {
 		return *m.ErrorCode
 	}
-	return Default_MsgCreateRoomReply_ErrorCode
+	return Default_CreateRoomReply_ErrorCode
 }
 
-func (m *MsgCreateRoomReply) GetId() int32 {
+func (m *CreateRoomReply) GetId() int32 {
 	if m != nil && m.Id != nil {
 		return *m.Id
 	}
 	return 0
 }
 
-func (m *MsgCreateRoomReply) GetCapacity() int32 {
+func (m *CreateRoomReply) GetCapacity() int32 {
 	if m != nil && m.Capacity != nil {
 		return *m.Capacity
 	}
 	return 0
 }
 
-type MsgPlayerCreateRoom struct {
+type PlayerCreateRoom struct {
 	RoomId           *int32  `protobuf:"varint,1,req,name=roomId" json:"roomId,omitempty"`
 	PlayerId         *string `protobuf:"bytes,2,req,name=playerId" json:"playerId,omitempty"`
 	Capacity         *int32  `protobuf:"varint,3,req,name=capacity" json:"capacity,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *MsgPlayerCreateRoom) Reset()                    { *m = MsgPlayerCreateRoom{} }
-func (m *MsgPlayerCreateRoom) String() string            { return proto.CompactTextString(m) }
-func (*MsgPlayerCreateRoom) ProtoMessage()               {}
-func (*MsgPlayerCreateRoom) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (m *PlayerCreateRoom) Reset()                    { *m = PlayerCreateRoom{} }
+func (m *PlayerCreateRoom) String() string            { return proto.CompactTextString(m) }
+func (*PlayerCreateRoom) ProtoMessage()               {}
+func (*PlayerCreateRoom) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
-func (m *MsgPlayerCreateRoom) GetRoomId() int32 {
+func (m *PlayerCreateRoom) GetRoomId() int32 {
 	if m != nil && m.RoomId != nil {
 		return *m.RoomId
 	}
 	return 0
 }
 
-func (m *MsgPlayerCreateRoom) GetPlayerId() string {
+func (m *PlayerCreateRoom) GetPlayerId() string {
 	if m != nil && m.PlayerId != nil {
 		return *m.PlayerId
 	}
 	return ""
 }
 
-func (m *MsgPlayerCreateRoom) GetCapacity() int32 {
+func (m *PlayerCreateRoom) GetCapacity() int32 {
 	if m != nil && m.Capacity != nil {
 		return *m.Capacity
 	}
 	return 0
 }
 
-type MsgPlayerQuitRoom struct {
+type PlayerQuitRoom struct {
 	RoomId           *int32  `protobuf:"varint,1,req,name=roomId" json:"roomId,omitempty"`
 	PlayerId         *string `protobuf:"bytes,2,req,name=playerId" json:"playerId,omitempty"`
 	PlayerIndex      *int32  `protobuf:"varint,3,req,name=playerIndex" json:"playerIndex,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *MsgPlayerQuitRoom) Reset()                    { *m = MsgPlayerQuitRoom{} }
-func (m *MsgPlayerQuitRoom) String() string            { return proto.CompactTextString(m) }
-func (*MsgPlayerQuitRoom) ProtoMessage()               {}
-func (*MsgPlayerQuitRoom) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (m *PlayerQuitRoom) Reset()                    { *m = PlayerQuitRoom{} }
+func (m *PlayerQuitRoom) String() string            { return proto.CompactTextString(m) }
+func (*PlayerQuitRoom) ProtoMessage()               {}
+func (*PlayerQuitRoom) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
-func (m *MsgPlayerQuitRoom) GetRoomId() int32 {
+func (m *PlayerQuitRoom) GetRoomId() int32 {
 	if m != nil && m.RoomId != nil {
 		return *m.RoomId
 	}
 	return 0
 }
 
-func (m *MsgPlayerQuitRoom) GetPlayerId() string {
+func (m *PlayerQuitRoom) GetPlayerId() string {
 	if m != nil && m.PlayerId != nil {
 		return *m.PlayerId
 	}
 	return ""
 }
 
-func (m *MsgPlayerQuitRoom) GetPlayerIndex() int32 {
+func (m *PlayerQuitRoom) GetPlayerIndex() int32 {
 	if m != nil && m.PlayerIndex != nil {
 		return *m.PlayerIndex
 	}
 	return 0
 }
 
+type CreateRoom struct {
+	Capacity         *int32 `protobuf:"varint,1,req,name=capacity" json:"capacity,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *CreateRoom) Reset()                    { *m = CreateRoom{} }
+func (m *CreateRoom) String() string            { return proto.CompactTextString(m) }
+func (*CreateRoom) ProtoMessage()               {}
+func (*CreateRoom) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+
+func (m *CreateRoom) GetCapacity() int32 {
+	if m != nil && m.Capacity != nil {
+		return *m.Capacity
+	}
+	return 0
+}
+
+type EnterRoom struct {
+	RoomId           *int32 `protobuf:"varint,1,req,name=roomId" json:"roomId,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *EnterRoom) Reset()                    { *m = EnterRoom{} }
+func (m *EnterRoom) String() string            { return proto.CompactTextString(m) }
+func (*EnterRoom) ProtoMessage()               {}
+func (*EnterRoom) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+
+func (m *EnterRoom) GetRoomId() int32 {
+	if m != nil && m.RoomId != nil {
+		return *m.RoomId
+	}
+	return 0
+}
+
+type GetRoomList struct {
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *GetRoomList) Reset()                    { *m = GetRoomList{} }
+func (m *GetRoomList) String() string            { return proto.CompactTextString(m) }
+func (*GetRoomList) ProtoMessage()               {}
+func (*GetRoomList) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+type Login struct {
+	PlayerId         *string `protobuf:"bytes,1,req,name=playerId" json:"playerId,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *Login) Reset()                    { *m = Login{} }
+func (m *Login) String() string            { return proto.CompactTextString(m) }
+func (*Login) ProtoMessage()               {}
+func (*Login) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *Login) GetPlayerId() string {
+	if m != nil && m.PlayerId != nil {
+		return *m.PlayerId
+	}
+	return ""
+}
+
+type LoginReply struct {
+	ErrorCode        *int32 `protobuf:"varint,1,req,name=errorCode" json:"errorCode,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *LoginReply) Reset()                    { *m = LoginReply{} }
+func (m *LoginReply) String() string            { return proto.CompactTextString(m) }
+func (*LoginReply) ProtoMessage()               {}
+func (*LoginReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+
+func (m *LoginReply) GetErrorCode() int32 {
+	if m != nil && m.ErrorCode != nil {
+		return *m.ErrorCode
+	}
+	return 0
+}
+
 func init() {
-	proto.RegisterType((*MsgPlayerEnterRoom)(nil), "world_messages.MsgPlayerEnterRoom")
-	proto.RegisterType((*MsgEnterRoomReply)(nil), "world_messages.MsgEnterRoomReply")
-	proto.RegisterType((*WorldMessage)(nil), "world_messages.WorldMessage")
+	proto.RegisterType((*PlayerEnterRoom)(nil), "world_messages.PlayerEnterRoom")
+	proto.RegisterType((*EnterRoomReply)(nil), "world_messages.EnterRoomReply")
 	proto.RegisterType((*Room)(nil), "world_messages.Room")
 	proto.RegisterType((*ReplyMsg)(nil), "world_messages.ReplyMsg")
-	proto.RegisterType((*MsgGetRoomListReply)(nil), "world_messages.MsgGetRoomListReply")
-	proto.RegisterType((*MsgCreateRoomReply)(nil), "world_messages.MsgCreateRoomReply")
-	proto.RegisterType((*MsgPlayerCreateRoom)(nil), "world_messages.MsgPlayerCreateRoom")
-	proto.RegisterType((*MsgPlayerQuitRoom)(nil), "world_messages.MsgPlayerQuitRoom")
-	proto.RegisterEnum("world_messages.MessageType", MessageType_name, MessageType_value)
+	proto.RegisterType((*GetRoomListReply)(nil), "world_messages.GetRoomListReply")
+	proto.RegisterType((*CreateRoomReply)(nil), "world_messages.CreateRoomReply")
+	proto.RegisterType((*PlayerCreateRoom)(nil), "world_messages.PlayerCreateRoom")
+	proto.RegisterType((*PlayerQuitRoom)(nil), "world_messages.PlayerQuitRoom")
+	proto.RegisterType((*CreateRoom)(nil), "world_messages.CreateRoom")
+	proto.RegisterType((*EnterRoom)(nil), "world_messages.EnterRoom")
+	proto.RegisterType((*GetRoomList)(nil), "world_messages.GetRoomList")
+	proto.RegisterType((*Login)(nil), "world_messages.Login")
+	proto.RegisterType((*LoginReply)(nil), "world_messages.LoginReply")
 	proto.RegisterEnum("world_messages.EnterRoomResult", EnterRoomResult_name, EnterRoomResult_value)
 }
 
 var fileDescriptor0 = []byte{
-	// 497 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x94, 0x53, 0xc1, 0x6e, 0xda, 0x40,
-	0x10, 0x95, 0x8d, 0x4d, 0x60, 0x0c, 0x66, 0xb3, 0x49, 0x25, 0xa4, 0x4a, 0x6d, 0xe5, 0x5e, 0x68,
-	0x0e, 0xa4, 0xe2, 0x96, 0xdc, 0x2a, 0x14, 0xb5, 0x54, 0x4d, 0x68, 0x51, 0xa5, 0x1e, 0x23, 0x17,
-	0x2f, 0xd4, 0xca, 0xc2, 0x5a, 0xde, 0xb5, 0x1a, 0xff, 0x6b, 0x3f, 0xa6, 0xb3, 0xbb, 0x0e, 0x18,
-	0xa3, 0x4a, 0xcd, 0x09, 0x31, 0x9e, 0xf7, 0xe6, 0xbd, 0x37, 0xb3, 0xf0, 0x2a, 0xcb, 0x85, 0x12,
-	0xf7, 0xab, 0x94, 0x33, 0x79, 0xf9, 0x43, 0xe4, 0x3c, 0xb9, 0x65, 0x52, 0xc6, 0x6b, 0x36, 0x36,
-	0x1f, 0x68, 0xf8, 0x5b, 0xd7, 0xee, 0x37, 0xb6, 0x28, 0xa3, 0x2b, 0xa0, 0xb7, 0x72, 0xfd, 0x95,
-	0xc7, 0x25, 0xcb, 0x6f, 0xb6, 0x8a, 0xe5, 0x0b, 0x21, 0x36, 0x34, 0x84, 0x76, 0x8e, 0xbf, 0xb3,
-	0x64, 0xe8, 0xbc, 0x71, 0x47, 0x3e, 0x3d, 0x83, 0x20, 0x33, 0x2d, 0xb3, 0x6d, 0xc2, 0x1e, 0x87,
-	0xae, 0x2e, 0x46, 0x1c, 0x4e, 0x11, 0xba, 0x03, 0x2d, 0x58, 0xc6, 0x4b, 0x3a, 0x80, 0x13, 0xdb,
-	0x29, 0x11, 0xda, 0x42, 0xe8, 0x0b, 0xe8, 0xc7, 0x9c, 0x8b, 0xe5, 0x03, 0x4b, 0x6a, 0x60, 0x7a,
-	0x89, 0x13, 0x98, 0x2c, 0xb8, 0x1a, 0xb6, 0xf0, 0x7f, 0x38, 0x79, 0x3d, 0x3e, 0x14, 0x36, 0xae,
-	0xf1, 0xea, 0xb6, 0xe8, 0x17, 0xf4, 0xea, 0x76, 0xe8, 0x3b, 0xf0, 0x54, 0x99, 0x31, 0x23, 0x30,
-	0x9c, 0xbc, 0x6c, 0xc2, 0xab, 0xb6, 0xef, 0xd8, 0x42, 0x09, 0x74, 0x2a, 0xf5, 0x89, 0x99, 0xde,
-	0xa5, 0x3d, 0xf0, 0x7e, 0x16, 0xab, 0x15, 0xce, 0x76, 0x46, 0x3d, 0xda, 0x07, 0x7f, 0x23, 0xd7,
-	0xf8, 0xd1, 0x33, 0xbe, 0xae, 0xc0, 0x33, 0x21, 0x00, 0xb8, 0xe9, 0x51, 0x00, 0x53, 0x51, 0x6c,
-	0x55, 0xe5, 0x01, 0x79, 0x97, 0x71, 0x16, 0x2f, 0x53, 0x55, 0x1a, 0x17, 0x7e, 0xb4, 0x80, 0x8e,
-	0x89, 0x01, 0x73, 0x79, 0x8e, 0xc0, 0x9d, 0x00, 0xcb, 0xbb, 0x57, 0xe7, 0x8e, 0x7a, 0xd1, 0x35,
-	0x9c, 0x21, 0xdd, 0x47, 0xa6, 0xb4, 0xa8, 0x2f, 0xa9, 0x54, 0x36, 0xe8, 0xb7, 0xe0, 0xeb, 0x15,
-	0xd9, 0x98, 0x83, 0xc9, 0x79, 0x93, 0x5f, 0x77, 0x47, 0x9f, 0xcc, 0x76, 0xa7, 0x39, 0x8b, 0x15,
-	0xdb, 0xef, 0xe8, 0x1c, 0xba, 0x2c, 0xcf, 0x05, 0x7a, 0x49, 0xb4, 0x3c, 0x67, 0xe4, 0x5f, 0x3b,
-	0xef, 0x2b, 0xbb, 0xff, 0x72, 0x36, 0x33, 0x2a, 0xec, 0x9d, 0xec, 0xf9, 0x8e, 0x0e, 0xe5, 0x38,
-	0xea, 0x63, 0xaa, 0xcf, 0xe6, 0x6e, 0x2c, 0xd5, 0xb7, 0x22, 0x55, 0xff, 0x49, 0xd4, 0xb8, 0x41,
-	0xc3, 0x75, 0xf1, 0xc7, 0x81, 0xa0, 0x9e, 0x64, 0x08, 0xb0, 0x57, 0x47, 0x1c, 0x4c, 0xb6, 0xbb,
-	0x3b, 0x24, 0xe2, 0x62, 0xb2, 0x9d, 0xa7, 0x89, 0xa4, 0x85, 0xb7, 0x1a, 0xd4, 0x62, 0x25, 0x1e,
-	0x8e, 0x18, 0x34, 0xb2, 0x22, 0x3e, 0xa5, 0x10, 0x1e, 0xde, 0x38, 0x69, 0xd3, 0x53, 0xe8, 0x3f,
-	0xf1, 0xd8, 0xd2, 0x09, 0x86, 0x4a, 0x9a, 0x3b, 0x22, 0x1d, 0xcd, 0xd8, 0x78, 0x5b, 0xa4, 0xab,
-	0x5b, 0x9b, 0x41, 0x12, 0xd0, 0x73, 0x0e, 0x33, 0x21, 0xc1, 0xc5, 0x1d, 0x0c, 0x1a, 0xef, 0x80,
-	0xb6, 0xc1, 0x9d, 0x3f, 0x58, 0x67, 0x1f, 0x38, 0xe2, 0x93, 0x72, 0xb6, 0x45, 0x67, 0xa8, 0x68,
-	0x5e, 0xa8, 0xf9, 0x6a, 0x5a, 0x65, 0x8d, 0xf6, 0xb0, 0xa4, 0x71, 0x77, 0x42, 0xdd, 0x3c, 0xa2,
-	0x24, 0x49, 0xbc, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x6c, 0xb2, 0xc0, 0xd8, 0x1e, 0x04, 0x00,
-	0x00,
+	// 425 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x8c, 0x92, 0xdf, 0x8b, 0xd3, 0x40,
+	0x10, 0xc7, 0x49, 0xda, 0x9c, 0x97, 0xe9, 0xe5, 0x87, 0xeb, 0x09, 0x15, 0xe1, 0x4e, 0xd6, 0x97,
+	0xc3, 0x87, 0x9e, 0x1c, 0xa8, 0xe8, 0x9b, 0x94, 0x7a, 0x14, 0xae, 0xad, 0xf6, 0xc5, 0xc7, 0x12,
+	0x9b, 0x4d, 0x08, 0xdd, 0x66, 0xc3, 0xee, 0x06, 0x9b, 0xff, 0xde, 0xfd, 0x11, 0x6c, 0xda, 0x5a,
+	0xf0, 0x29, 0x64, 0x66, 0xbe, 0x9f, 0xf9, 0xce, 0xcc, 0xc2, 0x4d, 0xc5, 0x99, 0x64, 0xab, 0xac,
+	0xa0, 0x44, 0xdc, 0xff, 0x64, 0x9c, 0xa6, 0x33, 0x22, 0x44, 0x92, 0x93, 0x91, 0x49, 0xa0, 0xf0,
+	0xb7, 0x8e, 0xad, 0xb6, 0x36, 0x28, 0xf0, 0x47, 0x88, 0xbe, 0xd3, 0xa4, 0x21, 0x7c, 0x52, 0x4a,
+	0xc2, 0x97, 0x8c, 0x6d, 0x51, 0x08, 0x17, 0x5c, 0x7d, 0xa7, 0xe9, 0xd0, 0x79, 0xe3, 0xde, 0x79,
+	0xe8, 0x05, 0x0c, 0x2a, 0x53, 0x32, 0x2d, 0x53, 0xb2, 0x1b, 0xba, 0x3a, 0x88, 0x0b, 0x08, 0xff,
+	0x2a, 0x96, 0xa4, 0xa2, 0x0d, 0x8a, 0xe0, 0x99, 0x2d, 0x13, 0x4a, 0xd7, 0x53, 0xba, 0x97, 0x10,
+	0x24, 0x94, 0xb2, 0xf5, 0x86, 0xa4, 0x1d, 0x25, 0xba, 0x57, 0x78, 0x22, 0x6a, 0x2a, 0x87, 0x3d,
+	0xf5, 0x1f, 0x3e, 0xdc, 0x8e, 0x0e, 0x2d, 0x8d, 0x3a, 0x5c, 0x5d, 0x86, 0x3f, 0x43, 0xdf, 0xf8,
+	0x02, 0x70, 0x8b, 0x13, 0x4f, 0x63, 0x56, 0x97, 0xb2, 0x25, 0xc7, 0x70, 0xb9, 0x4e, 0xaa, 0x64,
+	0x5d, 0xc8, 0xc6, 0xb0, 0x3d, 0xfc, 0x01, 0x2e, 0x8d, 0xb9, 0x99, 0xc8, 0xd1, 0x15, 0xf4, 0x65,
+	0x53, 0x11, 0x03, 0xf0, 0x51, 0x00, 0xde, 0x56, 0xe4, 0x6a, 0x46, 0x2b, 0x55, 0xc9, 0x5f, 0x75,
+	0x96, 0x19, 0xd9, 0x15, 0xfe, 0x04, 0xf1, 0x23, 0x91, 0xba, 0xe9, 0x53, 0x21, 0xa4, 0x1d, 0xef,
+	0x2d, 0x78, 0x7a, 0x2b, 0x76, 0xb8, 0xc1, 0xc3, 0xf5, 0xb1, 0x6b, 0x5d, 0x8d, 0x27, 0x10, 0x8d,
+	0x39, 0x49, 0x24, 0xd9, 0xaf, 0xe5, 0x1a, 0x7c, 0xc2, 0x39, 0x53, 0x46, 0x53, 0xdd, 0xdb, 0xb9,
+	0xf3, 0xbe, 0x38, 0xef, 0xdb, 0x59, 0xce, 0xd9, 0xfe, 0x06, 0xb1, 0x3d, 0xca, 0x1e, 0x76, 0x72,
+	0x15, 0xa5, 0x6a, 0xaf, 0x62, 0x39, 0xfe, 0x3f, 0x38, 0x8f, 0x10, 0x5a, 0xce, 0x8f, 0xba, 0x90,
+	0xff, 0x49, 0x39, 0xba, 0xb6, 0x05, 0xdd, 0x00, 0x74, 0xac, 0x74, 0x1b, 0x19, 0x0c, 0x7e, 0x0d,
+	0xfe, 0xd9, 0xf7, 0x83, 0x03, 0x18, 0x74, 0xb6, 0x89, 0x5f, 0x81, 0xf7, 0xc4, 0xf2, 0xa2, 0x3c,
+	0xe8, 0x6d, 0x8e, 0x82, 0x6f, 0x01, 0x4c, 0xca, 0x6e, 0xee, 0xf9, 0xe1, 0xe6, 0x14, 0xea, 0xdd,
+	0x1c, 0xa2, 0xa3, 0xd7, 0x81, 0x2e, 0xc0, 0x5d, 0x6c, 0x62, 0x47, 0x1d, 0xd4, 0xff, 0x4a, 0x95,
+	0xc7, 0xb4, 0x99, 0x96, 0xb1, 0xab, 0xc4, 0xc1, 0xa2, 0x96, 0x8b, 0x6c, 0xdc, 0x1a, 0x8d, 0x7b,
+	0x3a, 0xa4, 0x75, 0x73, 0x26, 0x27, 0x3b, 0x65, 0x44, 0xc4, 0xfd, 0x3f, 0x01, 0x00, 0x00, 0xff,
+	0xff, 0x0d, 0x93, 0xe1, 0xfd, 0x2e, 0x03, 0x00, 0x00,
 }

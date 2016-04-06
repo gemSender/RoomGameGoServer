@@ -1,10 +1,13 @@
 package game
 
-import (
-	"../messages/room_messages/proto_files"
-)
 
 const maxCommandCount int = 16
+
+type playerCommand struct{
+	frame int32
+	msgId int32
+	bytes []byte
+}
 
 // +gen * slice:"First"
 type Player struct {
@@ -13,31 +16,31 @@ type Player struct {
 	SessionChan PlayerRoomSession
 	nextMsgId int32
 	lastFrame int32
-	commands []*messages.GenMessage
+	commands []*playerCommand
 }
 
 func NewPlayer()  *Player{
-	return &Player{commands:make([]*messages.GenMessage, 0, maxCommandCount)}
+	return &Player{commands:make([]*playerCommand, 0, maxCommandCount)}
 }
-func (this *Player) GetComand(msg *messages.GenMessage)  bool{
+func (this *Player) GetComand(msgId int32, frame int32, msgBytes []byte)  bool{
 	i := 0
 	for i = len(this.commands) - 1; i >= 0; i--{
 		item := this.commands[i]
-		diff := *item.Frame - *msg.Frame
+		diff := item.frame - frame
 		if diff < 0 {
 			newSlice := append(this.commands, nil)
 			copy(newSlice[i + 1:], newSlice[i:])
-			newSlice[i] = msg
+			newSlice[i] = &playerCommand{frame:frame, bytes:msgBytes, msgId : msgId}
 			this.commands = newSlice
 			return true
 		}else if diff == 0{
-			return *item.MsgId != *msg.MsgId
+			return item.msgId != msgId
 		}
 	}
 	if i == -1{
 		newSlice := this.commands[0 : len(this.commands)+1]
 		copy(newSlice[1:], newSlice[0:])
-		newSlice[0] = msg
+		newSlice[0] = &playerCommand{frame:frame, bytes:msgBytes, msgId : msgId}
 		this.commands = newSlice
 		return true
 	}

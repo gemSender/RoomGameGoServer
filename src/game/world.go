@@ -2,9 +2,8 @@ package game
 
 import (
 	"../messages/world_messages/proto_files"
-	"../utility"
-	"github.com/golang/protobuf/proto"
 	"log"
+	"github.com/golang/protobuf/proto"
 )
 
 var world_instance *World
@@ -25,13 +24,10 @@ func CreateWorld()  *World{
 	ret.nextRoomId = 1
 	ret.nextPlayerIndex = 1
 	world_instance = ret
-	worldMsgDispatcher.RegisterHandler(world_messages.MessageType_CreateRoom, ret.OnCreateRoomMsgCallBack)
-	worldMsgDispatcher.RegisterHandler(world_messages.MessageType_EnterRoom, ret.OnEnterRoomCallBack)
-	worldMsgDispatcher.RegisterHandler(world_messages.MessageType_GetRoomList, ret.OnGetRoomList)
 	return ret
 }
 
-func (this *World) CreateRoom(capacity int32) *Room{
+func (this *World) DoCreateRoom(capacity int32) *Room{
 	ret := NewRoom(capacity)
 	roomId := this.nextRoomId
 	ret.Id = roomId
@@ -40,7 +36,7 @@ func (this *World) CreateRoom(capacity int32) *Room{
 	return ret
 }
 
-func (this *World) EnterRoom(playerId string, pIndex *int32,roomIdx int32) (world_messages.EnterRoomResult, []int32) {
+func (this *World) DoEnterRoom(playerId string, pIndex *int32,roomIdx int32) (world_messages.EnterRoomResult, []int32) {
 	room, findErr := this.Rooms.First(func(x *Room) bool{
 		return x.Id == roomIdx
 	})
@@ -84,79 +80,45 @@ func (this *World)  OnPlayerDisconnect(playerId string){
 			log.Println("player quit room")
 			delete(this.PlayerIndex_Room_Map, Index)
 			room.RemovePlayer(playerId)
-			pushMsg := world_messages.MsgPlayerQuitRoom{PlayerId:&playerId, RoomId:&room.Id, PlayerIndex:&Index}
-			pushBytes, encodeErr := proto.Marshal(&pushMsg)
-			if encodeErr != nil{
-				log.Panic(encodeErr)
-			}
-			for pId, session := range worldMsgDispatcher.playerChanDict{
-				if pId != playerId{
-					session.Send(world_messages.MessageType_PlayerQuitRoom, -1, pushBytes)
-				}
-			}
+			pushMsg := &world_messages.PlayerQuitRoom{PlayerId:&playerId, RoomId:&room.Id, PlayerIndex:&Index}
+			worldMsgDispatcher.PushMutiply(pushMsg, func(pId string) bool {return pId != playerId})
 		}
 	}
 }
 
-func (this *World) OnCreateRoomMsgCallBack(session WorldSession, msg *world_messages.WorldMessage, msgBytes []byte) {
-	buff := msg.GetBuff()
-	capacity := utility.BytesToInt32(buff)
-	newRoom := this.CreateRoom(capacity)
-	replyMsg := world_messages.MsgCreateRoomReply{
+func (this *World) CreateRoom(session WorldSession, msgId int32, innerMsg proto.Message) {
+	capacity := innerMsg.(*world_messages.CreateRoom).GetCapacity()
+	newRoom := this.DoCreateRoom(capacity)
+	replyMsg := world_messages.CreateRoomReply{
 		Capacity:&capacity,
 		Id:&newRoom.Id,
 	}
-	replyBytes, encodeErr := proto.Marshal(&replyMsg)
-	if encodeErr != nil{
-		log.Panic(encodeErr)
-	}
-	session.Send(world_messages.MessageType_CreateRoomReply, msg.GetMsgId(), replyBytes)
-	pushMsg := world_messages.MsgPlayerCreateRoom{RoomId:&newRoom.Id, PlayerId:&session.PlayerId, Capacity:&newRoom.Capacity}
-	pushBytes, encodeErr1 := proto.Marshal(&pushMsg)
-	if encodeErr1 != nil{
-		log.Panic(encodeErr1)
-	}
-	for pId, pSession := range worldMsgDispatcher.playerChanDict{
-		if pId != session.PlayerId {
-			pSession.Send(world_messages.MessageType_PlayerCreateRoom, -1, pushBytes)
-		}
-	}
+	session.Send(msgId, &replyMsg)
+	pushMsg := world_messages.PlayerCreateRoom{RoomId:&newRoom.Id, PlayerId:&session.PlayerId, Capacity:&newRoom.Capacity}
+	worldMsgDispatcher.PushMutiply(&pushMsg, func(pId string) bool{return pId != session.PlayerId})
 }
 
-func (this *World) OnEnterRoomCallBack(session WorldSession, msg *world_messages.WorldMessage, msgBytes []byte) {
-	buff := msg.GetBuff()
-	roomId := utility.BytesToInt32(buff)
+func (this *World) EnterRoom(session WorldSession, msgId int32, innerMsg proto.Message) {
+	roomId := innerMsg.(*world_messages.EnterRoom).GetRoomId()
 	var myIndex int32
-	result, playerIdices := this.EnterRoom(session.PlayerId, &myIndex, roomId)
-	replyMsg := world_messages.MsgEnterRoomReply{}
+	result, playerIdices := this.DoEnterRoom(session.PlayerId, &myIndex, roomId)
+	replyMsg := &world_messages.EnterRoomReply{}
 	replyMsg.Result = &result
 	replyMsg.AllockedIndex = &myIndex
 	if result == world_messages.EnterRoomResult_Ok{
 		replyMsg.Players = playerIdices
-		pushMsg := world_messages.MsgPlayerEnterRoom{}
+		pushMsg := &world_messages.PlayerEnterRoom{}
 		pushMsg.RoomId = &roomId
 		pushMsg.PlayerIndex = &myIndex
-		pushBytes, encodeErr := proto.Marshal(&pushMsg)
-		if encodeErr != nil{
-			panic(encodeErr)
-		}
-		for pId, pSession := range worldMsgDispatcher.playerChanDict{
-			if pId != session.PlayerId {
-				pSession.Send(world_messages.MessageType_PlayerEnterRoom, -1, pushBytes)
-			}
-		}
+		worldMsgDispatcher.PushMutiply(pushMsg, func(pId string) bool {return pId != session.PlayerId})
 	}
-	replyBytes, encodeErr1 := proto.Marshal(&replyMsg)
-	if encodeErr1 != nil{
-		panic(encodeErr1)
-	}
-	session.Send(world_messages.MessageType_EnterRoomReply, msg.GetMsgId(), replyBytes)
+	session.Send(msgId, replyMsg)
 }
 
 
-func (this *World) OnGetRoomList(session WorldSession, msg *world_messages.WorldMessage, msgBytes []byte) {
+func (this *World) GetRoomList(session WorldSession, msgId int32, innerMsg proto.Message) {
 	replyRooms := make([]*world_messages.Room, len(this.Rooms))
-	replyMsg := world_messages.MsgGetRoomListReply{}
+	replyMsg := &world_messages.GetRoomListReply{}
 	for i, r := range this.Rooms{
 		item := &world_messages.Room{}
 		rid, cap, pCount := r.Id, r.Capacity, int32(len(r.Players))
@@ -166,9 +128,21 @@ func (this *World) OnGetRoomList(session WorldSession, msg *world_messages.World
 		replyRooms[i] = item
 	}
 	replyMsg.Rooms = replyRooms
-	replyBytes, encodeErr := proto.Marshal(&replyMsg)
-	if encodeErr != nil{
-		log.Panic(encodeErr)
+	session.Send(msgId, replyMsg)
+}
+
+func (this *World) Login(session WorldSession, msgId int32, innerMsg proto.Message) {
+
+	loginMsg := innerMsg.(*world_messages.Login)
+	if worldMsgDispatcher.GetSession(loginMsg.GetPlayerId()) == nil{
+		session.PlayerId = loginMsg.GetPlayerId()
+		worldMsgDispatcher.RegisterPlayer(session)
+		var errorCode int32 = 0
+		replyMsg := &world_messages.LoginReply{ErrorCode:&errorCode}
+		session.Send(msgId, replyMsg)
+	}else{
+		var errorCode int32 = 1
+		replyMsg := &world_messages.LoginReply{ErrorCode:&errorCode}
+		session.Send(msgId, replyMsg)
 	}
-	session.Send(world_messages.MessageType_GetRoomListReply, msg.GetMsgId(), replyBytes)
 }
